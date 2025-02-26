@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "ts-node index.ts",
     "dev:watch": "nodemon -L --exec \"ts-node index.ts\"",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest",
+    "test:watch": "jest --watch"
   },
   "keywords": [],
   "author": "",
