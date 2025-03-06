@@ -11,6 +11,10 @@
   "license": "ISC",
   "packageManager": "pnpm@10.5.1",
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.2.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "leah": "^0.1.0",
     "nodemon": "^3.1.9",
     "prettier": "^3.5.2"
   },

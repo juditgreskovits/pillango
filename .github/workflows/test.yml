@@ -1,0 +1,15 @@
+name: Test
+
+run-name: test source code
+
+on: push
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup node
+        uses: actions/setup-node@v4
+
+      - name: Check out repository code
+        uses: actions/checkout@v4
