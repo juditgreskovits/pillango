@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
-import { processLeahData } from './process';
+import { getLeahData } from './process';
 
 export async function GET() {
   try {
-    const processedData = await processLeahData();
+    const processedData = await getLeahData();
     return NextResponse.json(processedData);
   } catch (error) {
     console.error('Error processing Leah data:', error);

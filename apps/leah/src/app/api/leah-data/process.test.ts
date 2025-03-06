@@ -5,6 +5,7 @@ import path from 'path';
 // Mock fs
 jest.mock('fs', () => ({
   readFileSync: jest.fn(),
+  existsSync: jest.fn(),
 }));
 
 describe('readLeahCsv', () => {
@@ -12,24 +13,36 @@ describe('readLeahCsv', () => {
     jest.clearAllMocks();
   });
 
-  it('should read CSV file', () => {
-    const mockCsvData = `Category,SubCategory,StartDate,FinishDate,Details
-test,subtest,2024-01-01,2024-01-02,test details`;
+  it('should read CSV file when it exists', () => {
+    const mockCsvData = `RecordCategory,RecordSubCategory,StartDate,FinishDate,Details
+Health,Medication,2024-01-01,2024-01-02,headache medication taken`;
 
-    // Mock fs.readFileSync
+    // Mock fs functions
+    (fs.existsSync as jest.Mock).mockReturnValue(true);
     (fs.readFileSync as jest.Mock).mockReturnValue(mockCsvData);
 
     const result = readLeahCsv();
 
     expect(result).toBe(mockCsvData);
     expect(fs.readFileSync).toHaveBeenCalledWith(
-      expect.stringContaining('public/data/leah.csv'),
+      expect.stringContaining('src/data/leah.csv'),
       'utf-8'
     );
   });
 
+  it('should throw helpful error when file does not exist', () => {
+    // Mock fs.existsSync to return false
+    (fs.existsSync as jest.Mock).mockReturnValue(false);
+
+    expect(() => readLeahCsv()).toThrow(
+      /CSV file not found.*Please ensure the file exists in the src\/data directory/
+    );
+    expect(fs.readFileSync).not.toHaveBeenCalled();
+  });
+
   it('should handle file read errors', () => {
-    // Mock fs.readFileSync to throw error
+    // Mock fs functions
+    (fs.existsSync as jest.Mock).mockReturnValue(true);
     (fs.readFileSync as jest.Mock).mockImplementation(() => {
       throw new Error('File not found');
     });
@@ -39,29 +52,34 @@ test,subtest,2024-01-01,2024-01-02,test details`;
 });
 
 describe('processLeahData', () => {
-  it('should process valid CSV data', () => {
-    const mockCsvData = `Category,SubCategory,StartDate,FinishDate,Details
-test,subtest,2024-01-01,2024-01-02,test details
-test2,subtest2,2024-01-03,2024-01-04,more details`;
+  it('should extract headache dates', () => {
+    const mockCsvData = `RecordCategory,RecordSubCategory,StartDate,FinishDate,Details
+Health,Medication,2024-01-01,2024-01-02,headache medication taken
+Health,Exercise,2024-01-03,2024-01-04,morning run
+Health,Medication,2024-01-05,2024-01-06,headache pills
+Other,Medication,2024-01-07,2024-01-08,headache treatment`;
 
     const result = processLeahData(mockCsvData);
 
-    expect(result.rows).toHaveLength(2);
-    expect(result.rows[0]).toEqual({
-      Category: 'test',
-      SubCategory: 'subtest',
-      StartDate: '2024-01-01',
-      FinishDate: '2024-01-02',
-      Details: 'test details',
-    });
+    expect(result.headacheDates).toEqual(['2024-01-01', '2024-01-05']);
   });
 
   it('should handle empty CSV data', () => {
-    const mockCsvData = `Category,SubCategory,StartDate,FinishDate,Details`;
+    const mockCsvData = `RecordCategory,RecordSubCategory,StartDate,FinishDate,Details`;
 
     const result = processLeahData(mockCsvData);
 
-    expect(result.rows).toHaveLength(0);
+    expect(result.headacheDates).toHaveLength(0);
+  });
+
+  it('should handle CSV data with no headache records', () => {
+    const mockCsvData = `RecordCategory,RecordSubCategory,StartDate,FinishDate,Details
+Health,Exercise,2024-01-01,2024-01-02,morning run
+Other,Medication,2024-01-03,2024-01-04,other medication`;
+
+    const result = processLeahData(mockCsvData);
+
+    expect(result.headacheDates).toHaveLength(0);
   });
 });
 
@@ -71,22 +89,18 @@ describe('getLeahData', () => {
   });
 
   it('should read and process CSV file and cache the data', async () => {
-    const mockCsvData = `Category,SubCategory,StartDate,FinishDate,Details
-test,subtest,2024-01-01,2024-01-02,test details`;
+    const mockCsvData = `RecordCategory,RecordSubCategory,StartDate,FinishDate,Details
+Health,Medication,2024-01-01,2024-01-02,headache medication taken
+Health,Exercise,2024-01-03,2024-01-04,morning run
+Health,Medication,2024-01-05,2024-01-06,headache pills`;
 
-    // Mock fs.readFileSync
+    // Mock fs functions
+    (fs.existsSync as jest.Mock).mockReturnValue(true);
     (fs.readFileSync as jest.Mock).mockReturnValue(mockCsvData);
 
     const result = await getLeahData();
 
-    expect(result.rows).toHaveLength(1);
-    expect(result.rows[0]).toEqual({
-      Category: 'test',
-      SubCategory: 'subtest',
-      StartDate: '2024-01-01',
-      FinishDate: '2024-01-02',
-      Details: 'test details',
-    });
+    expect(result.headacheDates).toEqual(['2024-01-01', '2024-01-05']);
 
     // Process data second time
     const cachedResult = await getLeahData();

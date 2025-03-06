@@ -1,9 +1,9 @@
 import { GET } from './route';
-import { processLeahData } from './process';
+import { getLeahData } from './process';
 
 // Mock the process function
 jest.mock('./process', () => ({
-  processLeahData: jest.fn(),
+  getLeahData: jest.fn(),
 }));
 
 describe('GET /api/leah-data', () => {
@@ -25,8 +25,8 @@ describe('GET /api/leah-data', () => {
       ],
     };
 
-    // Mock processLeahData
-    (processLeahData as jest.Mock).mockResolvedValue(mockData);
+    // Mock getLeahData
+    (getLeahData as jest.Mock).mockResolvedValue(mockData);
 
     const response = await GET();
     const data = await response.json();
@@ -36,10 +36,8 @@ describe('GET /api/leah-data', () => {
   });
 
   it('should handle processing errors', async () => {
-    // Mock processLeahData to throw error
-    (processLeahData as jest.Mock).mockRejectedValue(
-      new Error('Processing error')
-    );
+    // Mock getLeahData to throw error
+    (getLeahData as jest.Mock).mockRejectedValue(new Error('Processing error'));
 
     const response = await GET();
     const data = await response.json();
