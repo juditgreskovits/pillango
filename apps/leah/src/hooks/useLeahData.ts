@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
+import type { ProcessedLeahData } from '@/types/leah';
 
 export function useLeahData() {
-  const [data, setData] = useState<string[] | null>(null);
+  const [data, setData] = useState<ProcessedLeahData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
